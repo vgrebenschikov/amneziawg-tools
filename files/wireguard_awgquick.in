@@ -27,6 +27,7 @@ status_cmd="${name}_status"
 wireguard_amnezia_start()
 {
 	${wireguard_amnezia_env:+eval export $wireguard_amnezia_env}
+    kldstat -n if_wg >/dev/null 2>&1 || kldload /boot/modules/if_wg.ko
 
 	for interface in ${wireguard_amnezia_interfaces}; do
 		%%PREFIX%%/bin/awg-quick up ${interface}

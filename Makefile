@@ -1,6 +1,7 @@
 PORTNAME=	amneziawg-tools
-PORTVERSION=	1.0.20240213
-PORTREVISION=	2
+VERSIONPREFIX=	v
+PORTVERSION=	1.0.20241018
+PORTREVISION=	1
 CATEGORIES=	net net-vpn
 MASTER_SITES=	https://github.com/amnezia-vpn/amneziawg-tools
 
@@ -9,13 +10,12 @@ COMMENT=	Fast, modern and secure VPN Tunnel with AmneziaVPN anti-detection tweak
 WWW=		https://github.com/amnezia-vpn/amneziawg-tools
 
 LICENSE=	GPLv2
-#LICENSE_FILE=	${WRKSRC}/../COPYING
 
 
 USES=		gmake
 USE_GITHUB=	yes
 GH_ACCOUNT=	amnezia-vpn
-GH_TAGNAME=	v1.0.20240213
+GH_TAGNAME=	${VERSIONPREFIX}${PORTVERSION}
 
 
 WRKSRC_SUBDIR=	src
