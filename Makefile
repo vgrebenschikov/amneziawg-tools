@@ -1,7 +1,7 @@
 PORTNAME=	amneziawg-tools
 VERSIONPREFIX=	v
 PORTVERSION=	1.0.20241018
-PORTREVISION=	1
+PORTREVISION=	2
 CATEGORIES=	net net-vpn
 MASTER_SITES=	https://github.com/amnezia-vpn/amneziawg-tools
 

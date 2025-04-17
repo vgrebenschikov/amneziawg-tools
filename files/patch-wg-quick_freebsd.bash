@@ -1,10 +1,11 @@
 --- wg-quick/freebsd.bash.orig	2024-10-01 13:02:42 UTC
 +++ wg-quick/freebsd.bash
-@@ -25,11 +25,16 @@ CONFIG_FILE=""
+@@ -25,11 +25,17 @@ CONFIG_FILE=""
  POST_DOWN=( )
  SAVE_CONFIG=0
  CONFIG_FILE=""
 +DESCRIPTION=""
++USERLAND=0
  PROGRAM="${0##*/}"
  ARGS=( "$@" )
  
@@ -17,7 +18,7 @@
  cmd() {
  	echo "[#] $*" >&3
  	"$@"
-@@ -40,7 +45,7 @@ die() {
+@@ -40,7 +46,7 @@ die() {
  	exit 1
  }
  
@@ -26,7 +27,7 @@
  
  unset ORIGINAL_TMPDIR
  make_temp() {
-@@ -64,7 +69,7 @@ parse_options() {
+@@ -64,7 +70,7 @@ parse_options() {
  }
  
  parse_options() {
@@ -35,7 +36,7 @@
  	CONFIG_FILE="$1"
  	if [[ $CONFIG_FILE =~ ^[a-zA-Z0-9_=+.-]{1,15}$ ]]; then
  		for path in "${CONFIG_SEARCH_PATHS[@]}"; do
-@@ -82,7 +87,7 @@ parse_options() {
+@@ -82,7 +88,7 @@ parse_options() {
  		stripped="${line%%\#*}"
  		key="${stripped%%=*}"; key="${key##*([[:space:]])}"; key="${key%%*([[:space:]])}"
  		value="${stripped#*=}"; value="${value##*([[:space:]])}"; value="${value%%*([[:space:]])}"
@@ -44,28 +45,20 @@
  		[[ $key == "[Interface]" ]] && interface_section=1
  		if [[ $interface_section -eq 1 ]]; then
  			case "$key" in
-@@ -96,12 +101,17 @@ parse_options() {
+@@ -96,9 +102,12 @@ parse_options() {
  			PreDown) PRE_DOWN+=( "$value" ); continue ;;
  			PostUp) POST_UP+=( "$value" ); continue ;;
  			PostDown) POST_DOWN+=( "$value" ); continue ;;
 +			Description) DESCRIPTION="$value"; continue ;;
  			SaveConfig) read_bool SAVE_CONFIG "$value"; continue ;;
++			UserLand) read_bool USERLAND "$value"; continue ;;
  			esac
  			case "$key" in
--			Jc);&
--			Jmin);&
--			Jmax);&
 +			
-+			# supported by wireguard-amnezia-kmod
-+			Jc);;
-+			Jmin);;
-+			Jmax);;
-+			
-+			# not yet supported by wireguard-amnezia-kmod
- 			S1);&
- 			S2);&
- 			H1);&
-@@ -109,6 +119,12 @@ parse_options() {
+ 			Jc);&
+ 			Jmin);&
+ 			Jmax);&
+@@ -109,6 +118,12 @@ parse_options() {
  			H3);&
  			H4) IS_ASESCURITY_ON=1;;
  			esac
@@ -78,8 +71,12 @@
  		fi
  		WG_CONFIG+="$line"$'\n'
  	done < "$CONFIG_FILE"
-@@ -133,8 +149,11 @@ add_if() {
- 	if [[ $IS_ASESCURITY_ON == 1 ]]; then
+@@ -130,11 +145,14 @@ add_if() {
+ add_if() {
+ 	local ret rc
+ 	local cmd="ifconfig wg create name "$INTERFACE""
+-	if [[ $IS_ASESCURITY_ON == 1 ]]; then
++	if [[ $USERLAND == 1 ]]; then
  		cmd="amneziawg-go "$INTERFACE"";
  	fi
 -	if ret="$(cmd $cmd 2>&1 >/dev/null)"; then
@@ -92,7 +89,7 @@
  	fi
  	rc=$?
  	if [[ $ret == *"ifconfig: ioctl SIOCSIFNAME (set name): File exists"* ]]; then
-@@ -301,14 +320,13 @@ monitor_daemon() {
+@@ -301,14 +319,13 @@ monitor_daemon() {
  	(make_temp
  	trap 'del_routes; clean_temp; exit 0' INT TERM EXIT
  	exec >/dev/null 2>&1
@@ -108,7 +105,7 @@
  		ifconfig "$INTERFACE" >/dev/null 2>&1 || break
  		[[ $AUTO_ROUTE4 -eq 1 || $AUTO_ROUTE6 -eq 1 ]] && set_endpoint_direct_route
  		# TODO: set the mtu as well, but only if up
-@@ -433,6 +451,20 @@ cmd_usage() {
+@@ -433,6 +450,20 @@ cmd_usage() {
  	_EOF
  }
  
@@ -129,7 +126,7 @@
  cmd_up() {
  	local i
  	[[ -z $(ifconfig "$INTERFACE" 2>/dev/null) ]] || die "\`$INTERFACE' already exists"
-@@ -446,7 +478,7 @@ cmd_up() {
+@@ -446,7 +477,7 @@ cmd_up() {
  	set_mtu
  	up_if
  	set_dns
