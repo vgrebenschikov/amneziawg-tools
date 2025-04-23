@@ -108,35 +108,38 @@ To setup autostart (wireguard-amnezia rc.d script will load module):
 ## Jc
 
 Number of junk packets before handshake.
+
 1–128 (recomended 3–10)
 
 ## Jmin
 
 Minimum size of junk packets.
+
 Jmin: < Jmax (recomended ~ 50)
 
 ## Jmax
 
 Maximum size of junk packets.
+
 Jmax: ≤ 1280 (recomended ~ 1000)
 
 ## S1
 
 Size of handshake initiation packet prepend junk. Should be the same on both ends.
-0–1280 (recomended 15–150)
-S1 != S2
+
+0–1280 (recomended 15–150), S1 != S2
 
 ## S2
 
 Size of handshake response packet prepend junk. Should be the same on both ends.
-0–1280 (recomended 15–150)
-S1 != S2
+
+0–1280 (recomended 15–150), S1 != S2
 
 ## H1-H4
 
 Custom identifiers for initiation/response/cookie/data packets. Should be the same on both ends.
-unique value in range of 4,294,967,295 (0x5 - 0xFFFFFFFF)
-H1 != H2 != H3 != H4
+
+The unique value in range of 5 - 4,294,967,295 (0x5 - 0xFFFFFFFF), H1 != H2 != H3 != H4
 
 ## Additional config options
 
