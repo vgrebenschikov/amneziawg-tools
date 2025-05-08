@@ -37,6 +37,14 @@ Unload original if_wg as and load updated from /boot/modules/if_wg.ko
 # kldload /boot/modules/if_wg.ko
 ```
 
+To make it automatically load from /boot/modules - add to /boot/loader.conf:
+
+```shell
+if_wg_name="/boot/modules/if_wg.ko"
+if_wg_load="YES"
+```
+
+
 ## Configuration
 
 Generally - same way as you will configure normal net/wireguard-tools:
