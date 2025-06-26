@@ -1,7 +1,7 @@
 PORTNAME=	amneziawg-tools
 VERSIONPREFIX=	v
 PORTVERSION=	1.0.20241018
-PORTREVISION=	4
+PORTREVISION=	5
 CATEGORIES=	net net-vpn
 MASTER_SITES=	https://github.com/amnezia-vpn/amneziawg-tools
 
@@ -23,6 +23,8 @@ WRKSRC_SUBDIR=	src
 MAKE_ARGS+=	DEBUG=no WITH_BASHCOMPLETION=yes WITH_SYSTEMDUNITS=no
 MAKE_ENV+=	MANDIR="${PREFIX}/share/man" \
 		SYSCONFDIR="${PREFIX}/etc"
+
+RUN_DEPENDS=	bash:shells/bash
 
 WGQUICK_DESC=		awg-quick(8) userland utility
 WGQUICK_RUN_DEPENDS=	bash:shells/bash
