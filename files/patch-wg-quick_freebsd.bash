@@ -23,7 +23,7 @@
  }
  
 -CONFIG_SEARCH_PATHS=( /etc/amnezia/amneziawg /usr/local/etc/amnezia/amneziawg )
-+CONFIG_SEARCH_PATHS=( /usr/local/etc/wireguard /usr/local/etc/amnezia/amneziawg )
++CONFIG_SEARCH_PATHS=( /usr/local/etc/amnezia/amneziawg  /usr/local/etc/wireguard )
  
  unset ORIGINAL_TMPDIR
  make_temp() {
@@ -74,8 +74,9 @@
 @@ -130,11 +145,14 @@ add_if() {
  add_if() {
  	local ret rc
- 	local cmd="ifconfig wg create name "$INTERFACE""
+-	local cmd="ifconfig wg create name "$INTERFACE""
 -	if [[ $IS_ASESCURITY_ON == 1 ]]; then
++	local cmd="ifconfig awg create name "$INTERFACE""
 +	if [[ $USERLAND == 1 ]]; then
  		cmd="amneziawg-go "$INTERFACE"";
  	fi
@@ -89,6 +90,24 @@
  	fi
  	rc=$?
  	if [[ $ret == *"ifconfig: ioctl SIOCSIFNAME (set name): File exists"* ]]; then
+@@ -209,7 +227,7 @@ set_mtu() {
+ 		[[ ${BASH_REMATCH[1]} == *:* ]] && family=inet6
+ 		output="$(route -n get "-$family" "${BASH_REMATCH[1]}" || true)"
+ 		[[ $output =~ interface:\ ([^ ]+)$'\n' && $(ifconfig "${BASH_REMATCH[1]}") =~ mtu\ ([0-9]+) && ${BASH_REMATCH[1]} -gt $mtu ]] && mtu="${BASH_REMATCH[1]}"
+-	done < <(wg show "$INTERFACE" endpoints)
++	done < <(awg show "$INTERFACE" endpoints)
+ 	if [[ $mtu -eq 0 ]]; then
+ 		read -r output < <(route -n get default || true) || true
+ 		[[ $output =~ interface:\ ([^ ]+)$'\n' && $(ifconfig "${BASH_REMATCH[1]}") =~ mtu\ ([0-9]+) && ${BASH_REMATCH[1]} -gt $mtu ]] && mtu="${BASH_REMATCH[1]}"
+@@ -242,7 +260,7 @@ collect_endpoints() {
+ 	while read -r _ endpoint; do
+ 		[[ $endpoint =~ ^\[?([a-z0-9:.]+)\]?:[0-9]+$ ]] || continue
+ 		ENDPOINTS+=( "${BASH_REMATCH[1]}" )
+-	done < <(wg show "$INTERFACE" endpoints)
++	done < <(awg show "$INTERFACE" endpoints)
+ }
+ 
+ set_endpoint_direct_route() {
 @@ -301,14 +319,13 @@ monitor_daemon() {
  	(make_temp
  	trap 'del_routes; clean_temp; exit 0' INT TERM EXIT
@@ -105,6 +124,24 @@
  		ifconfig "$INTERFACE" >/dev/null 2>&1 || break
  		[[ $AUTO_ROUTE4 -eq 1 || $AUTO_ROUTE6 -eq 1 ]] && set_endpoint_direct_route
  		# TODO: set the mtu as well, but only if up
+@@ -354,7 +371,7 @@ set_config() {
+ }
+ 
+ set_config() {
+-	echo "$WG_CONFIG" | cmd wg setconf "$INTERFACE" /dev/stdin
++	echo "$WG_CONFIG" | cmd awg setconf "$INTERFACE" /dev/stdin
+ }
+ 
+ save_config() {
+@@ -386,7 +403,7 @@ save_config() {
+ 	done
+ 	old_umask="$(umask)"
+ 	umask 077
+-	current_config="$(cmd wg showconf "$INTERFACE")"
++	current_config="$(cmd awg showconf "$INTERFACE")"
+ 	trap 'rm -f "$CONFIG_FILE.tmp"; clean_temp; exit' INT TERM EXIT
+ 	echo "${current_config/\[Interface\]$'\n'/$new_config}" > "$CONFIG_FILE.tmp" || die "Could not write configuration file"
+ 	sync "$CONFIG_FILE.tmp"
 @@ -433,6 +450,20 @@ cmd_usage() {
  	_EOF
  }
@@ -120,7 +157,7 @@
 +				[[ $j =~ ^[0-9a-z:.]+/[0-9]+$ ]] && echo "$j"
 +			done
 +		fi
-+	done < <(wg show "$INTERFACE" allowed-ips) | sort -nr -k 2 -t /
++	done < <(awg show "$INTERFACE" allowed-ips) | sort -nr -k 2 -t /
 +}
 +
  cmd_up() {
@@ -135,3 +172,21 @@
  		add_route "$i"
  	done
  	[[ $AUTO_ROUTE4 -eq 1 || $AUTO_ROUTE6 -eq 1 ]] && set_endpoint_direct_route
+@@ -456,7 +487,7 @@ cmd_down() {
+ }
+ 
+ cmd_down() {
+-	[[ " $(wg show interfaces) " == *" $INTERFACE "* ]] || die "\`$INTERFACE' is not a WireGuard interface"
++	[[ " $(awg show interfaces) " == *" $INTERFACE "* ]] || die "\`$INTERFACE' is not a WireGuard interface"
+ 	execute_hooks "${PRE_DOWN[@]}"
+ 	[[ $SAVE_CONFIG -eq 0 ]] || save_config
+ 	del_if
+@@ -465,7 +496,7 @@ cmd_save() {
+ }
+ 
+ cmd_save() {
+-	[[ " $(wg show interfaces) " == *" $INTERFACE "* ]] || die "\`$INTERFACE' is not a WireGuard interface"
++	[[ " $(awg show interfaces) " == *" $INTERFACE "* ]] || die "\`$INTERFACE' is not a WireGuard interface"
+ 	save_config
+ }
+ 

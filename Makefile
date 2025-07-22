@@ -1,6 +1,6 @@
 PORTNAME=	amneziawg-tools
 PORTVERSION=	1.0.20241018
-PORTREVISION=	6
+PORTREVISION=	7
 CATEGORIES=	net net-vpn
 MASTER_SITES=	https://github.com/amnezia-vpn/amneziawg-tools/
 
@@ -22,14 +22,13 @@ MAKE_ARGS+=	DEBUG=no WITH_BASHCOMPLETION=yes WITH_SYSTEMDUNITS=no
 MAKE_ENV+=	MANDIR="${PREFIX}/share/man" \
 		SYSCONFDIR="${PREFIX}/etc"
 
-USE_RC_SUBR=	wireguard-amnezia
+USE_RC_SUBR=	amneziawg
 
 .include <bsd.port.options.mk>
 
 post-patch:
 	@${REINPLACE_CMD} -e 's|wg s|awg s|g' \
-		${WRKSRC}/completion/wg-quick.bash-completion \
-		${WRKSRC}/wg-quick/freebsd.bash
+		${WRKSRC}/completion/wg-quick.bash-completion
 
 post-install:
 	@${MKDIR} ${STAGEDIR}${PREFIX}/etc/amnezia/amneziawg
