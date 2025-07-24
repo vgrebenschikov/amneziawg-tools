@@ -8,7 +8,7 @@
 #                             (default: "NO")
 #
 # amneziawg_interfaces (str): List of interfaces to bring up/down
-#                             on start/stop. (eg: "wg0 wg1")
+#                             on start/stop. (eg: "awg0 awg1")
 #                             (default: "")
 # amneziawg_env (str):        Environment variables for the userspace
 #                             implementation. (eg: "LOG_LEVEL=debug")
