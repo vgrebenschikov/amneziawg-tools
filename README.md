@@ -134,25 +134,25 @@ Number of junk packets before handshake.
 
 Minimum size of junk packets.
 
-Jmin: < Jmax (recomended ~ 50)
+Jmin: < Jmax (recomended ~ 8)
 
 ## Jmax
 
 Maximum size of junk packets.
 
-Jmax: ≤ 1280 (recomended ~ 1000)
+Jmax: ≤ 1280 (recomended ~ 80)
 
 ## S1
 
 Size of handshake initiation packet prepend junk. Should be the same on both ends.
 
-0–1280 (recomended 15–150), S1 != S2
+0–1132 (recomended 15–150), S1 + 56 ≠ S2
 
 ## S2
 
 Size of handshake response packet prepend junk. Should be the same on both ends.
 
-0–1280 (recomended 15–150), S1 != S2
+0–1188 (recomended 15–150), S1 + 56 ≠ S2
 
 ## H1-H4
 
