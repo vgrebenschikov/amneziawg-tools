@@ -71,7 +71,8 @@
  		fi
  		WG_CONFIG+="$line"$'\n'
  	done < "$CONFIG_FILE"
-@@ -130,11 +145,14 @@ add_if() {
+@@ -129,12 +144,15 @@ add_if() {
+ 
  add_if() {
  	local ret rc
 -	local cmd="ifconfig wg create name "$INTERFACE""
