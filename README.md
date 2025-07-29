@@ -211,3 +211,18 @@ netstat -rn | fgrep awg0
 192.168.1.0/24     link#3             U              awg0
 192.168.1.2        link#3             UHS            awg0
 ```
+
+### Monitor
+
+Do not run `route monitor` when there is no need to do anything on default
+change. That will help to avoid keeping two bashes and one route binaries
+per interface always.
+
+Default value is true.
+
+```config
+[Interface]
+...
+Monitor = false
+...
+```

@@ -1,11 +1,12 @@
 --- wg-quick/freebsd.bash.orig	2024-10-01 13:02:42 UTC
 +++ wg-quick/freebsd.bash
-@@ -25,11 +25,17 @@ CONFIG_FILE=""
+@@ -25,11 +25,18 @@ CONFIG_FILE=""
  POST_DOWN=( )
  SAVE_CONFIG=0
  CONFIG_FILE=""
 +DESCRIPTION=""
 +USERLAND=0
++MONITOR=1
  PROGRAM="${0##*/}"
  ARGS=( "$@" )
  
@@ -18,7 +19,7 @@
  cmd() {
  	echo "[#] $*" >&3
  	"$@"
-@@ -40,7 +46,7 @@ die() {
+@@ -40,7 +47,7 @@ die() {
  	exit 1
  }
  
@@ -27,7 +28,7 @@
  
  unset ORIGINAL_TMPDIR
  make_temp() {
-@@ -64,7 +70,7 @@ parse_options() {
+@@ -64,7 +71,7 @@ parse_options() {
  }
  
  parse_options() {
@@ -36,7 +37,7 @@
  	CONFIG_FILE="$1"
  	if [[ $CONFIG_FILE =~ ^[a-zA-Z0-9_=+.-]{1,15}$ ]]; then
  		for path in "${CONFIG_SEARCH_PATHS[@]}"; do
-@@ -82,7 +88,7 @@ parse_options() {
+@@ -82,7 +89,7 @@ parse_options() {
  		stripped="${line%%\#*}"
  		key="${stripped%%=*}"; key="${key##*([[:space:]])}"; key="${key%%*([[:space:]])}"
  		value="${stripped#*=}"; value="${value##*([[:space:]])}"; value="${value%%*([[:space:]])}"
@@ -45,20 +46,21 @@
  		[[ $key == "[Interface]" ]] && interface_section=1
  		if [[ $interface_section -eq 1 ]]; then
  			case "$key" in
-@@ -96,9 +102,12 @@ parse_options() {
+@@ -96,9 +103,13 @@ parse_options() {
  			PreDown) PRE_DOWN+=( "$value" ); continue ;;
  			PostUp) POST_UP+=( "$value" ); continue ;;
  			PostDown) POST_DOWN+=( "$value" ); continue ;;
 +			Description) DESCRIPTION="$value"; continue ;;
  			SaveConfig) read_bool SAVE_CONFIG "$value"; continue ;;
 +			UserLand) read_bool USERLAND "$value"; continue ;;
++			Monitor) read_bool MONITOR "$value"; continue ;;
  			esac
  			case "$key" in
 +			
  			Jc);&
  			Jmin);&
  			Jmax);&
-@@ -109,6 +118,12 @@ parse_options() {
+@@ -109,6 +120,12 @@ parse_options() {
  			H3);&
  			H4) IS_ASESCURITY_ON=1;;
  			esac
@@ -71,7 +73,7 @@
  		fi
  		WG_CONFIG+="$line"$'\n'
  	done < "$CONFIG_FILE"
-@@ -129,12 +144,15 @@ add_if() {
+@@ -129,12 +146,15 @@ add_if() {
  
  add_if() {
  	local ret rc
@@ -91,7 +93,7 @@
  	fi
  	rc=$?
  	if [[ $ret == *"ifconfig: ioctl SIOCSIFNAME (set name): File exists"* ]]; then
-@@ -209,7 +227,7 @@ set_mtu() {
+@@ -209,7 +229,7 @@ set_mtu() {
  		[[ ${BASH_REMATCH[1]} == *:* ]] && family=inet6
  		output="$(route -n get "-$family" "${BASH_REMATCH[1]}" || true)"
  		[[ $output =~ interface:\ ([^ ]+)$'\n' && $(ifconfig "${BASH_REMATCH[1]}") =~ mtu\ ([0-9]+) && ${BASH_REMATCH[1]} -gt $mtu ]] && mtu="${BASH_REMATCH[1]}"
@@ -100,7 +102,7 @@
  	if [[ $mtu -eq 0 ]]; then
  		read -r output < <(route -n get default || true) || true
  		[[ $output =~ interface:\ ([^ ]+)$'\n' && $(ifconfig "${BASH_REMATCH[1]}") =~ mtu\ ([0-9]+) && ${BASH_REMATCH[1]} -gt $mtu ]] && mtu="${BASH_REMATCH[1]}"
-@@ -242,7 +260,7 @@ collect_endpoints() {
+@@ -242,7 +262,7 @@ collect_endpoints() {
  	while read -r _ endpoint; do
  		[[ $endpoint =~ ^\[?([a-z0-9:.]+)\]?:[0-9]+$ ]] || continue
  		ENDPOINTS+=( "${BASH_REMATCH[1]}" )
@@ -109,7 +111,12 @@
  }
  
  set_endpoint_direct_route() {
-@@ -301,14 +319,13 @@ monitor_daemon() {
+@@ -297,18 +317,18 @@ monitor_daemon() {
+ }
+ 
+ monitor_daemon() {
++	[[ $MONITOR -eq 0 ]] && return 0
+ 	echo "[+] Backgrounding route monitor" >&2
  	(make_temp
  	trap 'del_routes; clean_temp; exit 0' INT TERM EXIT
  	exec >/dev/null 2>&1
@@ -125,7 +132,7 @@
  		ifconfig "$INTERFACE" >/dev/null 2>&1 || break
  		[[ $AUTO_ROUTE4 -eq 1 || $AUTO_ROUTE6 -eq 1 ]] && set_endpoint_direct_route
  		# TODO: set the mtu as well, but only if up
-@@ -354,7 +371,7 @@ set_config() {
+@@ -354,7 +374,7 @@ set_config() {
  }
  
  set_config() {
@@ -134,7 +141,7 @@
  }
  
  save_config() {
-@@ -386,7 +403,7 @@ save_config() {
+@@ -386,7 +406,7 @@ save_config() {
  	done
  	old_umask="$(umask)"
  	umask 077
@@ -143,7 +150,7 @@
  	trap 'rm -f "$CONFIG_FILE.tmp"; clean_temp; exit' INT TERM EXIT
  	echo "${current_config/\[Interface\]$'\n'/$new_config}" > "$CONFIG_FILE.tmp" || die "Could not write configuration file"
  	sync "$CONFIG_FILE.tmp"
-@@ -433,6 +450,20 @@ cmd_usage() {
+@@ -433,6 +453,20 @@ cmd_usage() {
  	_EOF
  }
  
@@ -164,7 +171,7 @@
  cmd_up() {
  	local i
  	[[ -z $(ifconfig "$INTERFACE" 2>/dev/null) ]] || die "\`$INTERFACE' already exists"
-@@ -446,7 +477,7 @@ cmd_up() {
+@@ -446,7 +480,7 @@ cmd_up() {
  	set_mtu
  	up_if
  	set_dns
@@ -173,7 +180,7 @@
  		add_route "$i"
  	done
  	[[ $AUTO_ROUTE4 -eq 1 || $AUTO_ROUTE6 -eq 1 ]] && set_endpoint_direct_route
-@@ -456,7 +487,7 @@ cmd_down() {
+@@ -456,7 +490,7 @@ cmd_down() {
  }
  
  cmd_down() {
@@ -182,7 +189,7 @@
  	execute_hooks "${PRE_DOWN[@]}"
  	[[ $SAVE_CONFIG -eq 0 ]] || save_config
  	del_if
-@@ -465,7 +496,7 @@ cmd_save() {
+@@ -465,7 +499,7 @@ cmd_save() {
  }
  
  cmd_save() {
