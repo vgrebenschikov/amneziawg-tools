@@ -191,7 +191,7 @@
 +			sleep $TRACK_DNS_CHANGES &
 +			wait $!
 +
-+			$cmd awg showconf "$INTERFACE" 2> /dev/null | wg_endpoints | \
++			awg showconf "$INTERFACE" 2> /dev/null | wg_endpoints | \
 +			while read -r pk peer_ip port; do
 +				peer_host="${ENDPOINTS[$pk]}"
 +				if [[ -n "$peer_host" ]]; then
@@ -204,7 +204,7 @@
 +						logger -t awg-quick -p local0.notice \
 +							"$INTERFACE/$pk host $peer_host:" \
 +							"IP missmatch: $host_ip != $peer_ip, configuring endpoint" || true
-+						$cmd awg set "$INTERFACE" peer "$pk" endpoint "$peer_host:$port" || true
++						awg set "$INTERFACE" peer "$pk" endpoint "$peer_host:$port" || true
 +					fi
 +				fi
 +			done
@@ -292,3 +292,25 @@
  	save_config
  }
  
+@@ -473,6 +591,10 @@ cmd_strip() {
+ 	echo "$WG_CONFIG"
+ }
+ 
++cmd_reload() {
++	cmd awg setconf "$INTERFACE" <(cmd_strip)
++}
++
+ # ~~ function override insertion point ~~
+ 
+ make_temp
+@@ -496,6 +618,10 @@ elif [[ $# -eq 2 && $1 == strip ]]; then
+ 	auto_su
+ 	parse_options "$2"
+ 	cmd_strip
++elif [[ $# -eq 2 && $1 == reload ]]; then
++	auto_su
++	parse_options "$2"
++	cmd_reload
+ else
+ 	cmd_usage
+ 	exit 1
