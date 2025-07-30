@@ -12,6 +12,8 @@
 #                             (default: "")
 # amneziawg_env (str):        Environment variables for the userspace
 #                             implementation. (eg: "LOG_LEVEL=debug")
+# amneziawg_kmod (str):       Kernel module to load. (eg: "if_awg")
+#                             (default: "if_awg", "" - no module)
 
 . /etc/rc.subr
 
@@ -26,8 +28,9 @@ status_cmd="${name}_status"
 
 amneziawg_start()
 {
+    kmod=${amneziawg_kmod:-if_awg}
 	${amneziawg_env:+eval export $amneziawg_env}
-    kldload -n if_awg
+    [ -n "${kmod}" ] && kldstat -q -n ${kmod} || kldload -n ${kmod}
 
 	for interface in ${amneziawg_interfaces}; do
 		%%PREFIX%%/bin/awg-quick up ${interface}

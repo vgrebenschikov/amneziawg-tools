@@ -212,7 +212,7 @@ netstat -rn | fgrep awg0
 192.168.1.2        link#3             UHS            awg0
 ```
 
-### Monitor
+### Monitor default route change
 
 Do not run `route monitor` when there is no need to do anything on default
 change. That will help to avoid keeping two bashes and one route binaries
@@ -224,5 +224,20 @@ Default value is true.
 [Interface]
 ...
 Monitor = false
+...
+```
+
+### Track DNS Changes
+
+If peer endpoint defined as a hostname - pereodically check if hostname was changed,
+and if changed update peer endpoint according to new hostname.
+Quite useful in case of DDNS configuations.
+
+Defautl values is 0, disabled.
+
+```config
+[Interface]
+...
+TrackDNSChanges = 300
 ...
 ```
