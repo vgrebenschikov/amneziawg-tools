@@ -11,10 +11,10 @@ sudo make install -C amneziawg-tools
 
 ## Using Kernel AmneziaWG module
 
-Install [net/amneziawg-kmod](https://github.com/vgrebenschikov/amneziawg-kmod)
+Install [net/amnezia-kmod](https://github.com/freebsd/freebsd-ports/tree/main/net/amnezia-kmod)
 
 ```shell
-kldload -n if_awg
+kldload -n if_amn
 ```
 
 ## Configuration with awg tool
@@ -61,13 +61,13 @@ Generally - similar way as you will configure with wg-quick from net/wireguard-t
 With configuration file, like:
 
 ```shell
-# cd /usr/local/etc/amnezia/amneziawg/
-# cat > awg0.conf << EOF
+# cd /usr/local/etc/amnezia/
+# cat > amn0.conf << EOF
 [Interface]
 PrivateKey = $(awg genkey)
 ListenPort = 12345
 Address = 192.168.1.1/24
-Description = Test AmneziaWG
+Description = Test Amnezia
 
 Jc = 7
 Jmin = 150
@@ -88,17 +88,17 @@ EOF
 Then start:
 
 ```shell
-awg-quick up awg0
-[#] ifconfig awg create name awg0 description Test AmneziaWG
-[#] awg setconf awg0 /dev/stdin
-[#] ifconfig awg0 inet 192.168.1.1/24 alias
-[#] ifconfig awg0 mtu 1420
-[#] ifconfig awg0 up
-[#] route -q -n add -inet 192.168.1.2/32 -interface awg0
+awg-quick up amn0
+[#] ifconfig amn create name amn0 description Test AmneziaWG
+[#] awg setconf amn0 /dev/stdin
+[#] ifconfig amn0 inet 192.168.1.1/24 alias
+[#] ifconfig amn0 mtu 1420
+[#] ifconfig amn0 up
+[#] route -q -n add -inet 192.168.1.2/32 -interface amn0
 [+] Backgrounding route monitor
 
 awg show
-interface: awg0
+interface: amn0
   public key: CI...
   private key: (hidden)
   listening port: 12345
@@ -204,12 +204,12 @@ Routes = 192.168.1.2/32
 and after start - only routes limited in Routes config section:
 
 ```shell
-awg-quick up awg0
+awg-quick up amn0
 ...
 
-netstat -rn | fgrep awg0
-192.168.1.0/24     link#3             U              awg0
-192.168.1.2        link#3             UHS            awg0
+netstat -rn | fgrep amn0
+192.168.1.0/24     link#3             U              amn0
+192.168.1.2        link#3             UHS            amn0
 ```
 
 ### Monitor default route change
@@ -229,9 +229,9 @@ Monitor = false
 
 ### Track DNS Changes
 
-If peer endpoint defined as a hostname - pereodically check if hostname was changed,
-and if changed update peer endpoint according to new hostname.
-Quite useful in case of DDNS configuations.
+If peer endpoint defined as a hostname - pereodically (timeount in seconds)
+check if hostname was changed, and if changed update peer endpoint according
+to new hostname. Quite useful in case of DDNS configuations.
 
 Defautl values is 0, disabled.
 
